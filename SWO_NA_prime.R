@@ -24,11 +24,11 @@ KOBE.plot =Biplot= CPUE.plot= TRUE
 ################################################
 
 # Set Working directory file where to store the results
-File = "C:/Work/Research/LargePelagics/ASSESSMENTS/JABBA_development"
+File = "C:/Assessments/ICCAT"
 # Set working directory for JABBA R source code
-JABBA.file = "C:/Work/Research/GitHub/JABBA"
+JABBA.file = "C:/Assessments/JABBA"
 # Set Assessment
-assessment = "SWO_SA"
+assessment = "SWO_NA"
 
 
 # Choose Sceanrio name for creating a seperate folCder
@@ -39,7 +39,8 @@ Scenarios = c(paste0("s",1:100))
 # S2: as S1 but introducing time blocks in 1999 for SPA and 2006 for JPN
 # S3: as Sw but with lnorm prior B1950/K = 1, CV = 0.05
 
-for(s in 1:4){
+for(s in 1:2){
+#s=1
 Scenario = Scenarios[s] 
 
 # Choose model type: 
@@ -48,7 +49,7 @@ Scenario = Scenarios[s]
 # 3: Fox
 # 4: Fox with Depensation (CMSY: Froese et al. 2016)
 # 5: Pella-Tomlinsson  
-  Model = 3 #ifelse(s>2,5,1)  # model
+ Model = ifelse(s==1,1,3) # 1 #ifelse(s>2,5,1)  # model
    
   Mod.names = c("Schaefer","Schaefer.RecImp","Fox","Fox.RecImp","Pella")[Model]
   
@@ -69,8 +70,8 @@ Scenario = Scenarios[s]
   #  Set shape (> 0, with 1.001 ~ Fox and 2 = Schaefer)
   setwd(paste(File))
   # Load assessment data
-  cpue = read.csv(paste0(assessment,"/cpue",assessment,".csv"))#
-  se =  read.csv(paste0(assessment,"/se",assessment,".csv"))# use 0.001 if not available 
+  cpue = read.csv(paste0(assessment,"/cpue",assessment,"_Combined.csv"))#
+  se =  read.csv(paste0(assessment,"/se",assessment,"_Combined.csv"))# use 0.001 if not available 
   catch = read.csv(paste0(assessment,"/catch",assessment,".csv"))
   
   names(cpue)
@@ -79,48 +80,25 @@ Scenario = Scenarios[s]
   #--------------------------------------------------
   # option to exclude CPUE time series or catch year
   #--------------------------------------------------
-  for(i in 2:ncol(se)){
-  se[,i] = ifelse(se[,i]<0.15,se[,i]+0.1,se[,i])
-  }
+ # manipulation of the data input files
+  #Drop Canada early CPUE and SE data, which is the 2nd column 
+  #if(s==2){
+  #  cpue=cpue[,-2]
+  #  se=se[,-2]
+  #}
+  
+    cpue=cpue[,c(1,13)]
+    se=se[,c(1,13)]
   
   
-  if(s<4){
-    cpue = cpue[,-c(10:12)]
-    se = se[,-c(10:12)]
-  }
-  
-  if(s<3){ # Combine SPA and JAPAN
-    cpue[,4] = apply(cpue[,4:5],1,mean,na.rm=TRUE)
-    cpue[,6] = apply(cpue[,6:7],1,mean,na.rm=TRUE)
-    
-    cpue = cpue[,-c(5,7)] 
-    se[,4] = apply(se[,4:5],1,mean,na.rm=TRUE)
-    se[,6] = apply(se[,6:7],1,mean,na.rm=TRUE)
-    
-    se = se[,-c(5,7)]
-    cpue[!is.finite(cpue[,4]),4]=NA
-    cpue[!is.finite(cpue[,5]),5]=NA
-    se[!is.finite(se[,4]),4]=NA
-    se[!is.finite(se[,5]),5]=NA
-    
-  }
-  
-  # Remove BrazilI
-  if(s>1){
-    cpue = cpue[,-c(2)]
-    se = se[,-c(2)]
-  }
-  
+  #check it was dropped
   names(cpue)
-  ncol(catch)
-  ncol(cpue)
-  ncol(se)
-  
   #------------------------------------------------------
   # Option use mean CPUE from state-space cpue averaging
   #-----------------------------------------------------
   # Produce CPUE plot average plot
-  CPUE.plot = TRUE
+  # If there is a single time series, make this FALSE
+  CPUE.plot = FALSE#TRUE
   
   #if(s>4){meanCPUE = TRUE} else{meanCPUE = FALSE}
   
@@ -141,8 +119,8 @@ Scenario = Scenarios[s]
   
   BK1.prior= "lnorm"
   # specify as mean and CV 
-  mu.psi = 1 
-  CV.psi = 0.05 
+  mu.psi = 0.85 
+  CV.psi = 0.1 
   
   #--------------------------------------------------------------
   # Determine estimation for catchability q and observation error 
@@ -158,7 +136,7 @@ Scenario = Scenarios[s]
   
   # As option for data-weighing
   # minimum additional observation error for each variance set (optional choose 1 value for both)
-  min.obsE = c(0.1) # Important if SE.I is not availble
+  min.obsE = c(0.2) # Important if SE.I is not availble
   
   # Use SEs for abudance indices (TRUE/FALSE)
   SE.I = TRUE
@@ -179,7 +157,7 @@ Scenario = Scenarios[s]
   r.range = FALSE # Set to false for mean/stdev specifications
   
   #r.prior = "Low"
-  r.prior = c(0.42,0.37) # as range with upper and lower bound of lnorm prior
+  r.prior = c(0.424,0.4) # as range with upper and lower bound of lnorm prior
   
   #><>><>><>><>><>><>><>><>><>><>><>><>><>><>><>><>><>><>><>><>>
   # Process Error
@@ -229,6 +207,7 @@ Scenario = Scenarios[s]
  
   }# THE END
   
+
 
 
  
